@@ -18,7 +18,6 @@ class App(customtkinter.CTk):
 
         # Main UI setup
         self.title("EV-Motor-Battery-Sizer")
-        self.iconbitmap("assets/motor_icon.ico")
         self.geometry("800x600")
 
         # setup 4 columns
