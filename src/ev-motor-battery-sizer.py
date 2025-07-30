@@ -50,9 +50,9 @@ class App(customtkinter.CTk):
         # Make the Label texts
         label_text_array = [
             "Total Weight with Driver (kg)", "Maximum Speed (km/hr)", "Top speed with Max Accelaration (km/hr)",  "Time for Max Speed Accelaration (s)",
-            "Total Range (km)", "Wheel Radius (m)", "Transmission Ratio", "Frontal Area (m2)", "Axle Moment of Inertia (kg/m2)", "Rolling Resistance",
-            "Air Density (kg/m2)", "Aerodynamic Coefficent", "Transmission Efficency", "Air Velocity (km/hr)", "Inverter Efficency",
-            "Motor Efficency", "Total Motor Power", "Battery Energy", "dummy1","dummy2"
+            "Total Range (km)", "Wheel Diameter (inch)", "Battery Voltage", "Frontal Area (m2)", "Mass Coefficent", "Rolling Resistance",
+            "Air Density (kg/m2)", "Aerodynamic Coefficent", "Average Speed (km/hr)", "Air Velocity (km/hr)", "Inverter Efficency",
+            "Motor Efficency", "Total Motor Power", "Battery Capacity (Ah)", "Wheel RPM","Battery Energy (kWh)"
         ]
 
         # Configure the Label text to labels
@@ -76,9 +76,9 @@ class App(customtkinter.CTk):
         # Make the entry texts
         entry_text_array = [
             "1645", "144", "100",  "11.5",
-            "160", "0.315", "8.19", "2", "3", "0.0083",
-            "1.2", "0.28", "0.96", "12", "0.95",
-            "0.95", "Total Motor Power", "Battery Energy", "dummy1","dummy2"
+            "160", "25", "72", "2", "1.1", "0.0083",
+            "1.2", "0.28", "40", "12", "0.95",
+            "0.95", "Total Motor Power", "Battery Capacity", "Wheel RPM","Battery Energy (kWh)"
         ]
 
         # Configure the Label text to labels
@@ -95,14 +95,14 @@ class App(customtkinter.CTk):
         self.acc_speed = float(self.entry_array[2].get())*5/18
         self.acc_time = float(self.entry_array[3].get())
         self.range = float(self.entry_array[4].get())
-        self.w_radius = float(self.entry_array[5].get())
-        self.g_ratio = float(self.entry_array[6].get())
+        self.w_diameter = float(self.entry_array[5].get())*0.0254
+        self.bat_voltage = float(self.entry_array[6].get())
         self.f_area = float(self.entry_array[7].get())
-        self.a_inertia = float(self.entry_array[8].get())
+        self.cm = float(self.entry_array[8].get())
         self.cr = float(self.entry_array[9].get())
         self.a_density = float(self.entry_array[10].get())
         self.cd = float(self.entry_array[11].get())
-        self.g_efficency = float(self.entry_array[12].get())
+        self.avg_speed = float(self.entry_array[12].get())*5/18
         self.a_speed = float(self.entry_array[13].get())*5/18
         self.i_efficency = float(self.entry_array[14].get())
         self.m_efficency = float(self.entry_array[15].get())
@@ -112,7 +112,22 @@ class App(customtkinter.CTk):
         self.power  =   ( ( 0.5 * self.a_density * self.cd * self.f_area * (self.a_speed+self.max_speed)**2) + \
                           ( self.weight * 9.81 * self.cr ) ) * self.max_speed / self.m_efficency
         self.entry_array[16].delete(0,"end")
-        self.entry_array[16].insert(0,f"{self.power}")
+        self.entry_array[16].insert(0,f"{round((self.power/1000),1)}")
+
+        wheel_rpm = (self.max_speed * 60) / (np.pi * self.w_diameter)
+        self.entry_array[18].delete(0,"end")
+        self.entry_array[18].insert(0,f"{round(wheel_rpm)}")
+
+        avg_power = ( ( 0.5 * self.a_density * self.cd * self.f_area * (self.a_speed+self.avg_speed)**2) + \
+                          ( self.weight * 9.81 * self.cr ) ) * self.avg_speed / self.m_efficency
+        
+        run_time = self.range / (self.avg_speed*18/5)
+        self.entry_array[19].delete(0,"end")
+        self.entry_array[19].insert(0,f"{round(avg_power*run_time/1000)}")
+
+        self.entry_array[17].delete(0,"end")
+        self.entry_array[17].insert(0,f"{round((avg_power*run_time/self.bat_voltage),1)}")
+
 
     def plot(self):
 
@@ -157,7 +172,7 @@ class App(customtkinter.CTk):
         max_speed = self.max_speed
 
         for ratio in speed_ratios:
-            total_power = ((self.weight *1.1) / (2 * self.acc_time)) * (acc_speed**2 + (max_speed / ratio)**2)+ \
+            total_power = ((self.weight * self.cm) / (2 * self.acc_time)) * (acc_speed**2 + (max_speed / ratio)**2)+ \
                             (0.2 * self.a_density * self.cd * self.f_area * acc_speed**3) + \
                            ((2 / 3) * self.weight * 9.81 * self.cr * acc_speed)
 
@@ -183,27 +198,25 @@ class App(customtkinter.CTk):
 # --- Plot 3: Speed vs Time at Different Speed Ratios ---
         plt.figure(3)  # Open another new figure window
 
-        time = list(range(25))  # secconds
+        time = list(np.arange(0, 25.2, 0.1))  # secconds
         speed_ratios = [2.5, 3.3, 4]
 
         acc_speed = self.acc_speed
         max_speed = self.max_speed
 
         for ratio in speed_ratios:
-            total_power = ((self.weight *1.1) / (2 * self.acc_time)) * (acc_speed**2 + (max_speed / ratio)**2)+ \
+            total_power = ((self.weight *self.cm) / (2 * self.acc_time)) * (acc_speed**2 + (max_speed / ratio)**2)+ \
                             (0.2 * self.a_density * self.cd * self.f_area * acc_speed**3) + \
                            ((2 / 3) * self.weight * 9.81 * self.cr * acc_speed)
-
-            print(total_power)
 
             speed = []
             time_plot = []
             for t in time:
                 t = max([0.1,t])
                 A = self.a_density * self.cd * self.f_area / 5
-                B = 1.1 * self.weight /  (2 * t)
+                B = self.cm * self.weight /  (2 * t)
                 C = 2/3 * self.weight * 9.81 * self.cr
-                D = ((1.1 * self.weight /  (2 * t)) * (self.max_speed / 2.5)**2) - total_power
+                D = ((self.cm * self.weight /  (2 * t)) * (self.max_speed / ratio)**2) - total_power
                 
                 roots = np.roots([A,B,C,D])
                 s = [r.real for r in roots if np.isreal(r) and r.real > 0]
