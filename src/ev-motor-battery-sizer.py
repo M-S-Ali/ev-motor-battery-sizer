@@ -73,10 +73,17 @@ class App(customtkinter.CTk):
                 self.entry_array.append(entry)
 
         # Make the entry texts
+        # entry_text_array = [
+        #     "1645", "144", "100",  "11.5",
+        #     "160", "25", "72", "2", "1.1", "0.0083",
+        #     "1.2", "0.28", "40", "12", "0.95",
+        #     "0.95", "Total Motor Power", "Battery Capacity", "Wheel RPM","Battery Energy (kWh)"
+        # ]
+
         entry_text_array = [
-            "1645", "144", "100",  "11.5",
-            "160", "25", "72", "2", "1.1", "0.0083",
-            "1.2", "0.28", "40", "12", "0.95",
+            "1400", "40", "20",  "10",
+            "60", "23", "72", "2", "1.1", "0.03",
+            "1.2", "0.9", "20", "5", "0.95",
             "0.95", "Total Motor Power", "Battery Capacity", "Wheel RPM","Battery Energy (kWh)"
         ]
 
@@ -152,7 +159,7 @@ class App(customtkinter.CTk):
                 power_required = total_force * v / self.m_efficency
                 power_kw.append(power_required / 1000)  # kW
 
-            plt.plot(max_speeds, power_kw, label=f'Grade = {grade}%')
+            plt.plot(max_speeds, power_kw, label=f'Grade = {grade}°')
 
         plt.xlabel("Speed (km/h)")
         plt.ylabel("Power (kW)")
@@ -185,7 +192,7 @@ class App(customtkinter.CTk):
                     f = total_power / v
                 force_kn.append(f/1000)  # N to kN
 
-            plt.plot(speeds, force_kn, label=f'Ratio = {ratio}')
+            plt.plot(speeds, force_kn, label=f'Speed Ratio = {ratio}, {round(total_power/1000,2)}kW')
 
         plt.xlabel("Speed (km/h)")
         plt.ylabel("Force (kN)")
@@ -225,7 +232,7 @@ class App(customtkinter.CTk):
                     time_plot.append(t)
 
 
-            plt.plot(time_plot, speed, label=f'Ratio = {ratio}')
+            plt.plot(time_plot, speed, label=f'Speed Ratio = {ratio}, {round(total_power/1000,2)}kW')
 
         plt.xlabel("Time (s)")
         plt.ylabel("Speed (km/hr)")
